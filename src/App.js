@@ -1,10 +1,34 @@
-import { useRef } from 'react'
+import { useRef, Suspense, useMemo } from 'react'
+import * as THREE from 'three'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { useGLTF, Stage, Grid, OrbitControls, Environment } from '@react-three/drei'
 import { EffectComposer, Bloom, ToneMapping } from '@react-three/postprocessing'
 import { easing } from 'maath'
+import { useControls } from 'leva'
+import Grass from './Grass'
 
 export default function App() {
+  const { autoRotate, rotateSpeed } = useControls('Camera', {
+    autoRotate:  { value: true },
+    rotateSpeed: { value: 0.05, min: -2, max: 2, step: 0.01, label: 'Rotate Speed' },
+  })
+
+  const { bladeHeight, bladeWidth, density, fieldRadius, windSpeed, tipHex, bottomHex } = useControls('Grass', {
+    bladeHeight: { value: 0.28,   min: 0.05, max: 1.5,    step: 0.01,    label: 'Blade Height' },
+    bladeWidth:  { value: 0.05,   min: 0.01, max: 0.2,    step: 0.005,   label: 'Blade Width'  },
+    density:     { value: 150,    min: 10,    max: 300,     step: 5,       label: 'Density (k)'  },
+    fieldRadius: { value: 50,     min: 5,    max: 100,     step: 1,       label: 'Radius'       },
+    windSpeed:   { value: 1.0,    min: 0,    max: 5,       step: 0.1,     label: 'Wind Speed'   },
+    tipHex:      { value: '#009900', label: 'Tip Color'  },
+    bottomHex:   { value: '#001a00', label: 'Root Color' },
+  })
+
+  // THREE.js r160 ColorManagement is enabled by default: new THREE.Color('#hex') already
+  // auto-converts sRGB→linear internally. Calling convertSRGBToLinear() again would apply
+  // the gamma curve twice and produce colours ~4× too dark. Just use the Color directly.
+  const tipColor    = useMemo(() => new THREE.Color(tipHex),    [tipHex])
+  const bottomColor = useMemo(() => new THREE.Color(bottomHex), [bottomHex])
+
   return (
     <Canvas flat shadows camera={{ position: [-15, 0, 10], fov: 25 }}>
       <fog attach="fog" args={['black', 15, 22.5]} />
@@ -12,7 +36,25 @@ export default function App() {
         <Kamdo rotation={[0, Math.PI, 0]} />
       </Stage>
       <Grid renderOrder={-1} position={[0, -1.85, 0]} infiniteGrid cellSize={0.6} cellThickness={0.6} sectionSize={3.3} sectionThickness={1.5} sectionColor={[0.5, 0.5, 10]} fadeDistance={30} />
-      <OrbitControls autoRotate autoRotateSpeed={0.05} enableZoom={false} makeDefault minPolarAngle={Math.PI / 2} maxPolarAngle={Math.PI / 2} />
+      <Suspense fallback={null}>
+        <Grass
+          options={{ bW: bladeWidth, bH: bladeHeight, joints: 5 }}
+          instances={density * 1000}
+          radius={fieldRadius}
+          windSpeed={windSpeed}
+          tipColor={tipColor}
+          bottomColor={bottomColor}
+        />
+      </Suspense>
+      {/* Soft polar limits: can look from nearly overhead (π/6) to just below horizon (π/1.9).
+          Prevents flipping under the ground while still giving full orbit freedom. */}
+      <OrbitControls
+        autoRotate={autoRotate}
+        autoRotateSpeed={rotateSpeed}
+        makeDefault
+        minPolarAngle={Math.PI / 6}
+        maxPolarAngle={Math.PI / 1.9}
+      />
       <EffectComposer disableNormalPass>
         <Bloom luminanceThreshold={2} mipmapBlur />
         <ToneMapping />

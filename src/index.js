@@ -2,6 +2,7 @@ import { createRoot } from 'react-dom/client'
 import './styles.css'
 import App from './App'
 import { Logo } from '@pmndrs/branding'
+import { Leva } from 'leva'
 
 function Overlay() {
   return (
@@ -28,6 +29,8 @@ function Overlay() {
 
 createRoot(document.getElementById('root')).render(
   <>
+    {/* storage={false} prevents leva from persisting stale values across reloads */}
+    <Leva storage={false} />
     <App />
     <Overlay />
   </>

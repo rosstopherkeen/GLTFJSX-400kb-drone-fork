@@ -77,7 +77,7 @@ function Kamdo(props) {
   const head = useRef()
   const stripe = useRef()
   const light = useRef()
-  const { nodes, materials } = useGLTF('/s2wt_kamdo_industrial_divinities-transformed.glb')
+  const { nodes, materials } = useGLTF(`${process.env.PUBLIC_URL}/s2wt_kamdo_industrial_divinities-transformed.glb`)
   useFrame((state, delta) => {
     const t = (1 + Math.sin(state.clock.elapsedTime * 2)) / 2
     stripe.current.color.setRGB(2 + t * 20, 2, 20 + t * 50)
@@ -98,4 +98,4 @@ function Kamdo(props) {
   )
 }
 
-useGLTF.preload('/s2wt_kamdo_industrial_divinities-transformed.glb')
+useGLTF.preload(`${process.env.PUBLIC_URL}/s2wt_kamdo_industrial_divinities-transformed.glb`)

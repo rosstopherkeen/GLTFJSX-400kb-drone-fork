@@ -1,6 +1,7 @@
 {
   "name": "gltfjsx-400kb-drone",
   "version": "1.0.0",
+  "homepage": "https://rosstopherkeen.github.io/GLTFJSX-400kb-drone-fork",
   "description": "Shows the results of gltfjsx transform compression.",
   "keywords": [
     "bloom",
